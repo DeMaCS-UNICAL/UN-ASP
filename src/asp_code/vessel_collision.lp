@@ -1,5 +1,5 @@
-#uncertain vessel/4, 2. rho = 1000, sigma = 10
-#uncertain vessel/4, 3. rho = 100, sigma = 10
+#uncertain vessel/4, 2. rho = 100, sigma = 100
+#uncertain vessel/4, 3. rho = 100, sigma = 100
 
 % --- Compute box limits (now in meters, using X/Y) ---
 box_lat_min(V,T,MinY) :- vessel(V,_,Y,T), halfLat(V,HLat), MinY = Y - HLat.

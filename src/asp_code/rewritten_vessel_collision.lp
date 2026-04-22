@@ -1,4 +1,4 @@
-vessel_r(X1, N, M, X4) :- vessel(X1, N1, M1, X4), &split_number_naive(N1,1000,10;N), &split_number_naive(M1,100,10;M).
+vessel_r(X1, N, M, X4) :- vessel(X1, N1, M1, X4), &split_number_naive(N1,100,100;N), &split_number_naive(M1,100,100;M).
 
 % --- Compute box limits (now in meters, using X/Y) ---
 box_lat_min(V,T,MinY) :- vessel_r(V,_,Y,T), halfLat(V,HLat), MinY = (Y-HLat).
