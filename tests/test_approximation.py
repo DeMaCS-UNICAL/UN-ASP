@@ -68,24 +68,8 @@ def test_split_number():
     # Test with large values
     assert approximation.split_number_naive(1000000, 1000, 500) == [999000, 999500, 1000000, 1000500]
 
-    # Test for quotes (if Quote=True)
-    assert approximation.split_number_naive(123, 10, 10, Quote=True) == ['120', '130']
-
 
 # Test to verify that String cannot be given as input to the function
 def test_split_number_naive_exception():
     with pytest.raises(ValueError):
-        approximation.split_number_naive("String", 5, 5, True)
-
-
-default_rho = 10
-default_sigma = 10
-
-# Test to verify the correct behavior of split_number_naive_quote
-def test_split_number_naive_quote():
-    with patch.object(approximation, "split_number_naive")as mock_split_naive:
-        approximation.split_number_naive_quote(10)
-        approximation.split_number_naive_quote(10, 5, 5)
-
-        mock_split_naive.assert_has_calls([call(10, default_rho, default_sigma, Quote=True),
-                                           call(10, 5, 5, Quote=True)])
+        approximation.split_number_naive("String", 5, 5)

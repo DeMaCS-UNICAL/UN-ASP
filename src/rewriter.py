@@ -16,7 +16,6 @@ class UncertainPredicate:
     uncertain_position: int
     rho: Optional[int] | Optional[float]= None
     sigma: Optional[int] | Optional[float]= None
-    quote: bool = False
 
 
 class RewriterConfig:
@@ -96,14 +95,6 @@ class ASPRewriter:
         if rs_match:
             uncertain.rho = rs_match.group(1)
             uncertain.sigma = rs_match.group(2)
-
-        # Parse optional string parameter
-        if "string" in line:
-            if self.config.semantics != "naive":
-                raise ValueError(f"String parameter only valid in naive semantics: {line}")
-            s_match = re.search(r'string\s*=\s*(\w+)', line)
-            if s_match:
-                uncertain.quote = s_match.group(1).lower() == "true"
 
         return uncertain
 
@@ -201,18 +192,10 @@ class ASPRewriter:
     ) -> str:
         """Generate a split literal for an uncertain position"""
 
-        if uncertain.quote:
-            # String/quote variant
-            if uncertain.rho is not None:
-                return f'&split_number_naive_quote({var_name}1,{uncertain.rho},{uncertain.sigma};{var_name})'
-            else:
-                return f'&split_number_naive_quote({var_name}1;{var_name})'
+        if uncertain.rho is not None:
+            return f'&split_number_{semantics}({var_name}1,{uncertain.rho},{uncertain.sigma};{var_name})'
         else:
-            # Numeric variant
-            if uncertain.rho is not None:
-                return f'&split_number_{semantics}({var_name}1,{uncertain.rho},{uncertain.sigma};{var_name})'
-            else:
-                return f'&split_number_{semantics}({var_name}1;{var_name})'
+            return f'&split_number_{semantics}({var_name}1;{var_name})'
 
     def rewrite_rule(self, rule: Rule) -> str:
         """Rewrite a single rule, replacing uncertain predicates"""

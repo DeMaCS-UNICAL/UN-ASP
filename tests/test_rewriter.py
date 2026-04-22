@@ -133,16 +133,6 @@ def test_parse_annotations_invalid_uncertain_annotation():
             rewriter.parse_annotations()
 
 
-def test_parse_annotations_invalid_string_parameter_in_set_semantics():
-    mock_file_data = "#set-based semantics\n#uncertain vessel/2, 2. string=true\n"
-
-    with patch("builtins.open", mock_open(read_data=mock_file_data)):
-        rewriter = ASPRewriter("file_asp.asp")
-
-        with pytest.raises(ValueError, match="String parameter only valid in naive semantics"):
-            rewriter.parse_annotations()
-
-
 def test_parse_annotations_operators_ignored_in_naive_semantics():
     mock_file_data = (
         "#naive-based semantics\n"
@@ -199,30 +189,6 @@ def test_generate_abstract_rules_with_sigma_rho():
 
         assert rewriter.generate_abstract_rules() == [
             "time_r(N) :- time(N1), &split_number_set(N1,10,10;N).\n"
-        ]
-
-
-def test_generate_abstract_rules_quote():
-    mock_file_data = "#uncertain log/2, 2. string=True\n"
-
-    with patch("builtins.open", mock_open(read_data=mock_file_data)):
-        rewriter = ASPRewriter("file_asp.asp")
-        rewriter.parse_annotations()
-
-        assert rewriter.generate_abstract_rules() == [
-            "log_r(X1, N) :- log(X1, N1), &split_number_naive_quote(N1;N).\n"
-        ]
-
-
-def test_generate_abstract_rules_quote_with_sigma_rho():
-    mock_file_data = "#uncertain time/1, 1. rho=10, sigma=10 string=True\n"
-
-    with patch("builtins.open", mock_open(read_data=mock_file_data)):
-        rewriter = ASPRewriter("file_asp.asp")
-        rewriter.parse_annotations()
-
-        assert rewriter.generate_abstract_rules() == [
-            "time_r(N) :- time(N1), &split_number_naive_quote(N1,10,10;N).\n"
         ]
 
 
@@ -341,35 +307,6 @@ def test_rewrite_program_comparison_operators_and_uncertain_predicates():
         "#show suspect/1.\n",
         "time(X) :- step(Y), X = (1100+(Y*10)).\n",
         "inRoom(X,T_1) :- time_r(T_1), door(X), log_r(X,T_2), &compareset(T_2,T_1,le,any,any).\n",
-    ]
-
-    with patch("builtins.open", mock_open(read_data=mock_file_data_input)) as mocked_open:
-        rewriter = ASPRewriter("file_asp.asp")
-        rewriter.rewrite_program()
-
-        file_handle = mocked_open.return_value
-        file_handle.writelines.assert_called_once_with(expected_output)
-
-
-def test_rewrite_program_quotes():
-    mock_file_data_input = (
-        "log(c,1200).\n"
-        "#uncertain log/2, 2. string = True\n"
-        "#uncertain time/1, 1. rho=10, sigma=10 string=True\n"
-        "#show suspect/1.\n"
-        "time(X) :- step(Y), X = 1100 + Y*10.\n"
-        "inRoom(X,T_1) :- time(T_1), door(X), log(X,T_2), T_2 <= T_1.\n"
-    )
-
-    expected_output = [
-        "log(c,1200).\n",
-        "",
-        "",
-        "log_r(X1, N) :- log(X1, N1), &split_number_naive_quote(N1;N).\n",
-        "time_r(N) :- time(N1), &split_number_naive_quote(N1,10,10;N).\n",
-        "#show suspect/1.\n",
-        "time(X) :- step(Y), X = (1100+(Y*10)).\n",
-        "inRoom(X,T_1) :- time_r(T_1), door(X), log_r(X,T_2), T_2 <= T_1.\n",
     ]
 
     with patch("builtins.open", mock_open(read_data=mock_file_data_input)) as mocked_open:

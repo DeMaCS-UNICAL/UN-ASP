@@ -39,33 +39,16 @@ def generalCeil(X, S):
     return math.ceil(X / S) * S
 
 
-def split_number_naive_quote(q, rho=default_rho, sigma=default_sigma):
-    return split_number_naive(q, rho, sigma, Quote=True)
-
-
-def split_number_naive(q, rho=default_rho, sigma=default_sigma, Quote=False):
-    if type(rho) is not int or type(sigma) is not int:
-        # If rho is not an integer it means that it was passed between quotes and is probably a float to be cast
-        rho = float(rho)
-        sigma = float(sigma)
+def split_number_naive(q, rho=default_rho, sigma=default_sigma):
     retValue = []
-    try:
-        if Quote:
-            q = float(q)
-    except ValueError:
+    if not isNumber(q):
         raise ValueError(f"The value {q} cannot be casted into a number.")
     samples = frange(generalCeil(q - rho, sigma), generalFloor(q + rho, sigma) + sigma, sigma)
 
     for sample in samples:
         # We want closed intervals at left, and open to the right
         if sample != q + rho:
-            if Quote:
-                retValue.append(str(sample))
-            else:
-                if type(rho) is float or type(sigma) is float or type(q) is float:
-                    retValue.append(float(sample))
-                else:
-                    retValue.append(int(sample))
+            retValue.append(sample)
     return retValue
 
 

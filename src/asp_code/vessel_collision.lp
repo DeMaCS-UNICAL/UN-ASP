@@ -20,3 +20,8 @@ box_collision(V1,V2,T) :- vessel(V1,_,_,T), vessel(V2,_,_,T), V1 < V2, lat_overl
 #show lat_overlap/3.
 #show lon_overlap/3.
 #show box_collision/3.
+
+vessel(228051000, 38311, 42402, 1443650684).
+vessel(228017700, 38265, 42375, 1443650684).
+halfLon(228051000, 4). halfLat(228051000, 14).
+halfLon(228017700, 5). halfLat(228017700, 22).
