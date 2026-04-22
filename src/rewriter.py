@@ -198,44 +198,35 @@ class ASPRewriter:
             return f'&split_number_{semantics}({var_name}1;{var_name})'
 
     def rewrite_rule(self, rule: Rule) -> str:
-        """Rewrite a single rule, replacing uncertain predicates"""
-        uncertain_names = self.get_uncertain_predicate_names()
+        """Rewrite a single rule, replacing uncertain predicates in body only"""
+        if rule.rule_type == "fact":
+            return str(rule)
+
+        uncertain_names = {(up.predicate, up.arity) for up in self.config.uncertain_predicates}
 
         # Rewrite body literals
         new_body = []
         for item in rule.body:
             if isinstance(item, Literal):
-                # Check if this literal uses an uncertain predicate
                 predicate_key = (item.atom.predicate, len(item.atom.terms))
                 if predicate_key in uncertain_names:
-                    # Replace predicate name with _r version
                     new_atom = Atom(
                         predicate=f"{item.atom.predicate}_r",
                         terms=item.atom.terms,
                         negated=item.atom.negated
                     )
-                    new_literal = Literal(atom=new_atom, naf=item.naf)
-                    new_body.append(new_literal)
+                    new_body.append(Literal(atom=new_atom, naf=item.naf))
                 else:
                     new_body.append(item)
             elif isinstance(item, BuiltinAtom):
-                # Handle builtin atoms (comparisons)
                 if self.config.semantics == "set":
-                    # Replace comparison with &compareset
-                    new_item = self._rewrite_builtin_comparison(item)
-                    new_body.append(new_item)
+                    new_body.append(self._rewrite_builtin_comparison(item))
                 else:
                     new_body.append(item)
             else:
                 new_body.append(item)
 
-        # Create new rule with rewritten body
-        new_rule = Rule(
-            head=rule.head,
-            body=new_body,
-            rule_type=rule.rule_type
-        )
-
+        new_rule = Rule(head=rule.head, body=new_body, rule_type=rule.rule_type)
         return str(new_rule)
 
     def _rewrite_builtin_comparison(self, builtin: BuiltinAtom) -> Literal | BuiltinAtom:
@@ -304,11 +295,12 @@ class ASPRewriter:
                     program = self.parser.parse(line)
 
                     if program.rules and uncertain_found:
-                        # Rewrite the rule
-                        rewritten = self.rewrite_rule(program.rules[0])
-                        output_lines.append(rewritten + '\n' if not rewritten.endswith('\n') else rewritten)
+                        rewritten_rules = [self.rewrite_rule(r) for r in program.rules]
+                        combined = "".join(
+                            r + '\n' if not r.endswith('\n') else r for r in rewritten_rules
+                        )
+                        output_lines.append(combined)
                     else:
-                        # Keep as-is (directive, query, or pre-uncertain section)
                         output_lines.append(line)
 
                 except:

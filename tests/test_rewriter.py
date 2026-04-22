@@ -496,6 +496,96 @@ def test_rewrite_builtin_comparison_unknown_operator():
 
 
 # ---------------------------------------------------------------------------
+# Multiple facts on the same line
+# ---------------------------------------------------------------------------
+
+def test_rewrite_program_multiple_facts_on_same_line():
+    mock_file_data_input = (
+        "#uncertain vessel/4, 2.\n"
+        "halfLon(228051000, 4). halfLat(228051000, 14).\n"
+    )
+
+    expected_output = [
+        "",
+        "vessel_r(X1, N, X3, X4) :- vessel(X1, N1, X3, X4), &split_number_naive(N1;N).\n",
+        "halfLon(228051000,4).\nhalfLat(228051000,14).\n",
+    ]
+
+    with patch("builtins.open", mock_open(read_data=mock_file_data_input)) as mocked_open:
+        rewriter = ASPRewriter("file_asp.asp")
+        rewriter.rewrite_program()
+
+        file_handle = mocked_open.return_value
+        file_handle.writelines.assert_called_once_with(expected_output)
+
+
+def test_rewrite_program_multiple_uncertain_facts_on_same_line():
+    mock_file_data_input = (
+        "#uncertain vessel/4, 2.\n"
+        "vessel(228051000, 38311, 42402, 1443650684). vessel(228017700, 38265, 42375, 1443650684).\n"
+    )
+
+    expected_output = [
+        "",
+        "vessel_r(X1, N, X3, X4) :- vessel(X1, N1, X3, X4), &split_number_naive(N1;N).\n",
+        "vessel(228051000,38311,42402,1443650684).\nvessel(228017700,38265,42375,1443650684).\n",
+    ]
+
+    with patch("builtins.open", mock_open(read_data=mock_file_data_input)) as mocked_open:
+        rewriter = ASPRewriter("file_asp.asp")
+        rewriter.rewrite_program()
+
+        file_handle = mocked_open.return_value
+        file_handle.writelines.assert_called_once_with(expected_output)
+
+
+def test_rewrite_program_mixed_facts_on_same_line():
+    mock_file_data_input = (
+        "#uncertain vessel/4, 2.\n"
+        "vessel(228051000, 38311, 42402, 1443650684). halfLon(228051000, 4).\n"
+    )
+
+    expected_output = [
+        "",
+        "vessel_r(X1, N, X3, X4) :- vessel(X1, N1, X3, X4), &split_number_naive(N1;N).\n",
+        "vessel(228051000,38311,42402,1443650684).\nhalfLon(228051000,4).\n",
+    ]
+
+    with patch("builtins.open", mock_open(read_data=mock_file_data_input)) as mocked_open:
+        rewriter = ASPRewriter("file_asp.asp")
+        rewriter.rewrite_program()
+
+        file_handle = mocked_open.return_value
+        file_handle.writelines.assert_called_once_with(expected_output)
+
+
+def test_rewrite_program_realistic_multiline_facts():
+    mock_file_data_input = (
+        "#uncertain vessel/4, 2.\n"
+        "vessel(228051000, 38311, 42402, 1443650684).\n"
+        "vessel(228017700, 38265, 42375, 1443650684).\n"
+        "halfLon(228051000, 4). halfLat(228051000, 14).\n"
+        "halfLon(228017700, 5). halfLat(228017700, 22).\n"
+    )
+
+    expected_output = [
+        "",
+        "vessel_r(X1, N, X3, X4) :- vessel(X1, N1, X3, X4), &split_number_naive(N1;N).\n",
+        "vessel(228051000,38311,42402,1443650684).\n",
+        "vessel(228017700,38265,42375,1443650684).\n",
+        "halfLon(228051000,4).\nhalfLat(228051000,14).\n",
+        "halfLon(228017700,5).\nhalfLat(228017700,22).\n",
+    ]
+
+    with patch("builtins.open", mock_open(read_data=mock_file_data_input)) as mocked_open:
+        rewriter = ASPRewriter("file_asp.asp")
+        rewriter.rewrite_program()
+
+        file_handle = mocked_open.return_value
+        file_handle.writelines.assert_called_once_with(expected_output)
+
+
+# ---------------------------------------------------------------------------
 # Constructor / main
 # ---------------------------------------------------------------------------
 
